@@ -9,18 +9,22 @@ const userRoutes = require('./api/routes/users');
 
 const uri = "mongodb+srv://node-shopping-app:"+process.env.MONGO_ATLAS_PASSWORD+"@node-shopping-app.azn9o.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
 console.log(uri)
+
 mongoose.connect(uri,
-{ 
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-});
+    { 
+        useNewUrlParser: true,
+        useUnifiedTopology: true
+    });
 mongoose.Promise = global.Promise;
 
+// const adminRoutes = require('./api/routes/admin');
+// app.use('/admin', adminRoutes);
 
 app.use(morgan('dev'));
 app.use('/media', express.static('media'));
 app.use(express.urlencoded({extended : false}));
 app.use(express.json());
+
 
 app.use((req, res, next)=>{
     res.header("Access-Control-Allow-Origin", "*");
@@ -41,6 +45,7 @@ app.use((req, res, next)=>{
 app.use('/products', productRoutes);
 app.use('/orders', orderRoutes);
 app.use('/users', userRoutes);
+
 
 app.use((req, res, next)=>{
     const err = new Error('Not Found');
