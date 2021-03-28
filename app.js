@@ -18,8 +18,8 @@ mongoose.connect(uri,
     });
 mongoose.Promise = global.Promise;
 
-// const adminRoutes = require('./api/routes/admin');
-// app.use('/admin', adminRoutes);
+const adminRoutes = require('./api/routes/admin');
+app.use('/admin', adminRoutes);
 
 app.use(morgan('dev'));
 app.use('/media', express.static('media'));

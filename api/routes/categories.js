@@ -41,7 +41,7 @@ router.get('/', (req, res, next)=>{
     .then((docs)=>{
         const resopnse = {
             count: docs.length,
-            products : docs
+            categories : docs
         }
         res.status(200).json(resopnse);
     })
@@ -80,7 +80,7 @@ router.post('/', checkAuth, upload.single('categoryIcon'),(req, res, next)=>{
         
             res.status(201).json({
                 message : 'Created category successfully',
-                createdProduct : {
+                category : {
                     id: result._id,
                     name : result.name,
                     categoryIcon : result.categoryIcon
@@ -151,22 +151,31 @@ router.patch('/:categoryId', checkAuth, (req, res, next)=>{
     });
 });
 
-router.delete('/:productId', checkAuth, (req, res, next)=>{
-    const id = req.params.productId;
-    Product.deleteOne({
-        _id : id
-    }).exec()
+router.delete('/:categoryId', checkAuth, (req, res, next)=>{
+    Category.findById(req.params.categoryId)
+    .exec()
     .then((result)=>{
-        res.status(200).json({
-            message: "Deleted product successfully"
-        });
+        if(result){
+            Category.remove({_id: req.params.categoryId})
+            .exec()
+            .then((result)=>{
+                console.log(result);
+                res.status(200).json({
+                    message: "Deleted category with id "+req.params.categoryId
+                });
+            });
+        }else{
+            res.status(404).json({
+                    message: "Category not found"
+            });
+        }    
     })
     .catch((err)=>{
-        console.log(err);
-        es.status(500).json({
+        res.status(500).json({
             error : err
         });
     });
+
 });
 
 module.exports = router;

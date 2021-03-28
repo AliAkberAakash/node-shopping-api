@@ -7,6 +7,7 @@ const mongoose = require('mongoose');
 const multer = require('multer');
 
 const checkAuth = require('../middleware/check-auth');
+const validateCategory = require('../middleware/validate-category');
 
 const storage = multer.diskStorage({
     destination: function(req, file, cb){
@@ -36,7 +37,7 @@ const upload = multer({
 router.get('/', (req, res, next)=>{
 
     Product.find()
-    .select('_id name description price productImage')
+    .select('_id name description price productImage categories')
     .exec()
     .then((docs)=>{
         const resopnse = {
@@ -53,14 +54,15 @@ router.get('/', (req, res, next)=>{
     });
 });
 
-router.post('/', checkAuth, upload.single('productImage'),(req, res, next)=>{
+router.post('/', checkAuth, upload.single('productImage'), (req, res, next)=>{
 
     const product = new Product({
         _id: new mongoose.Types.ObjectId(),
         name : req.body.name,
         description: req.body.description,
         price : req.body.price,
-        productImage: req.file.path
+        productImage: req.file.path,
+        categories: req.body.categories
     });
 
     product.save()
@@ -73,6 +75,7 @@ router.post('/', checkAuth, upload.single('productImage'),(req, res, next)=>{
                 name : result.name,
                 description: result.description,
                 price : result.price,
+                categories: result.categories,
                 productImage : result.productImage
             }
         });
