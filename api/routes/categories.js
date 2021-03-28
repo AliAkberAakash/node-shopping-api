@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 var path = require('path')
 
-const Product = require('../models/product');
+const Category = require('../models/category');
 const mongoose = require('mongoose');
 const multer = require('multer');
 
@@ -10,10 +10,10 @@ const checkAuth = require('../middleware/check-auth');
 
 const storage = multer.diskStorage({
     destination: function(req, file, cb){
-        cb(null, './media/products/')
+        cb(null, './media/products/');
     },
     filename: function(req, file, cb){
-        cb(null, Date.now() + path.extname(file.originalname))
+        cb(null, Date.now() + path.extname(file.originalname));
     }
 });
 
@@ -35,8 +35,8 @@ const upload = multer({
 
 router.get('/', (req, res, next)=>{
 
-    Product.find()
-    .select('_id name description price productImage')
+    Category.find()
+    .select('_id name categoryIcon')
     .exec()
     .then((docs)=>{
         const resopnse = {
@@ -53,29 +53,41 @@ router.get('/', (req, res, next)=>{
     });
 });
 
-router.post('/', checkAuth, upload.single('productImage'),(req, res, next)=>{
+router.post('/', checkAuth, upload.single('categoryIcon'),(req, res, next)=>{
 
-    const product = new Product({
-        _id: new mongoose.Types.ObjectId(),
-        name : req.body.name,
-        description: req.body.description,
-        price : req.body.price,
-        productImage: req.file.path
-    });
+    var filePath;
+        if(req.file!=null){
+            filePath = req.file.path;
+        }
 
-    product.save()
+    Category.find({ name: req.body.name})
+    .exec()
     .then((result)=>{
-    
-        res.status(201).json({
-            message : 'Created product successfully',
-            createdProduct : {
-                id: result._id,
-                name : result.name,
-                description: result.description,
-                price : result.price,
-                productImage : result.productImage
-            }
+        if(result.length>0){
+            return res.status(403).json({
+                message: "A category already exists with this name"
+            });
+        }
+
+        const category = new Category({
+            _id: new mongoose.Types.ObjectId(),
+            name : req.body.name,
+            categoryIcon: filePath
         });
+    
+        category.save()
+        .then((result)=>{
+        
+            res.status(201).json({
+                message : 'Created category successfully',
+                createdProduct : {
+                    id: result._id,
+                    name : result.name,
+                    categoryIcon : result.categoryIcon
+                }
+            });
+        });  
+
     })
     .catch((err)=>{
         console.log(err);
@@ -84,15 +96,12 @@ router.post('/', checkAuth, upload.single('productImage'),(req, res, next)=>{
         });
     });
 
-    console.log(product);    
-    console.log(req.body);   
-
 });
 
-router.get('/:productId', (req, res, next)=>{
-    const id = req.params.productId;
-    Product.findById(id)
-    .select('_id name price productImage')
+router.get('/:categoryId', (req, res, next)=>{
+    const id = req.params.categoryId;
+    Category.findById(id)
+    .select('_id name categoryIcon')
     .exec()
     .then((doc)=>{
         
@@ -100,7 +109,7 @@ router.get('/:productId', (req, res, next)=>{
             res.status(200).json(doc);
         else 
             res.status(404).json({
-                message : "The product with id "+req.params.productId+" doesnt exist."
+                message : "The category with id "+req.params.categoryId+" doesnt exist."
             });    
     })
     .catch((err)=>{
@@ -111,8 +120,8 @@ router.get('/:productId', (req, res, next)=>{
     });
 });
 
-router.patch('/:productId', checkAuth, (req, res, next)=>{
-    const id = req.params.productId;
+router.patch('/:categoryId', checkAuth, (req, res, next)=>{
+    const id = req.params.categoryId;
 
     const updateOps = {};
 
@@ -120,12 +129,18 @@ router.patch('/:productId', checkAuth, (req, res, next)=>{
         updateOps[ops.propName] = ops.value;
     }
 
-    Product.updateOne({_id : id}, {
+    console.log(updateOps);
+    console.log(id);
+
+    Category.updateOne({_id : id}, {
         $set: updateOps
     }).exec()
     .then((result)=>{
+
+        console.log(result);
+
         res.status(200).json({
-            message : 'Updated product successfully'
+            message : 'Updated category successfully'
         });
     })
     .catch((err)=>{
