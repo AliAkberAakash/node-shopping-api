@@ -36,8 +36,23 @@ const upload = multer({
 
 router.get('/', (req, res, next)=>{
 
+    var perPage = req.query.perpage;
+    var page = req.query.page >= 1 ? req.query.page : 1;
+
+    page = page - 1
+
+    // convert to numeric
+    page = parseInt(page);
+    perPage = parseInt(perPage);
+
+    console.log(page);
+    console.log(perPage);
+
     Product.find()
     .select('_id name description price productImage categories')
+    .sort({ name: "asc" })
+    .limit(perPage)
+    .skip(perPage*page)
     .exec()
     .then((docs)=>{
         const resopnse = {
